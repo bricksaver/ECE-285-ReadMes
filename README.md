@@ -1,81 +1,127 @@
-# Readme
+# LCT
 
-## Learning by ignoring
+Code accompanying the paper  
+***Learning by Creating Tests, with Application to Neural Architecture Search*** [paper]()  
+<!-- Xiangning Chen, Ruochen Wang, Minhao Cheng, Xiaocheng Tang, Cho-Jui Hsieh -->
 
----
+This code is based on the implementation of [P-DARTS](https://github.com/chenxin061/pdarts), [DARTS](https://github.com/quark0/darts) and [PC-DARTS](https://github.com/yuhuixu1993/PC-DARTS).
 
-Code for paper Learning by ignoring
+## Architecture Search
 
-### Environment
+<!-- **Search on NAS-Bench-201 Space: (3 datasets to choose from)**
 
----
+* Data preparation: Please first download the 201 benchmark file and prepare the api follow [this repository](https://github.com/D-X-Y/NAS-Bench-201).
 
-The code is tested on
+* ```cd 201-space && python train_search_progressive.py``` -->
 
-- PyTorch 1.40
-- Python 3
+**Composing LCT with DARTS:**
 
-Other dependencies:
+```
+CIFAR-10/100: cd darts-LCT && python train_search_ts.py --teacher_arch 18 \\
+--weight_lambda 1 --weight_gamma 1 --unrolled\\
+--is_cifar100 0/1 --gpu 0 --save xxx
+```
 
-- numpy `pip install numpy`
-- higher `pip install higher`
+**Composing LCT with P-DARTS:**
 
-### Note
+```
+CIFAR-100: cd pdarts-LCT && python train_search_ts.py --tmp_data_dir ../data --save EXP \\
+--add_layers 6 --add_layers 12 \\
+--dropout_rate 0.1 --dropout_rate 0.4 --dropout_rate 0.7 \\
+--note cifar100-xxx --gpu 0 --cifar100 \\
+--weight_lambda 1 --weight_gamma 1 --teacher_arch 18
+```
 
----
+```
+CIFAR-10: cd pdarts-LCT && python train_search_ts.py --tmp_data_dir ../data --save EXP \\
+--add_layers 6 --add_layers 12 \\
+--dropout_rate 0.1 --dropout_rate 0.4 --dropout_rate 0.7 \\
+--note cifar10-xxx --gpu 0 \\
+--weight_lambda 1 --weight_gamma 1 --teacher_arch 18
+```
+<!-- * ```ImageNet: cd DARTS-space && python train_search_imagenet.py``` -->
 
-- Dataset is located in temp folder.
-- Results, saved models, and logs are located in results folder.
-- To reproduce the results showed in the paper, the batch size should be 64. However, batch size 64 will take about 11~14gb gpu memory. To reduce the memory usage, you can change batch size to, for example, 32 by adding an argument `—-batch_size=32` .
+**Composing LCT with PC-DARTS:**
 
-### Settings
+* Data preparation: Please first sample 10% and 2.5% images for earch class as the training and validation set, which is done by pcdarts-LCT/sample_images.py.
 
----
+```
+ImageNet: cd pcdarts-LCT && python train_search_imagenet_ts.py --save xxx --tmp_data_dir xxx \\
+--weight_lambda 1 --weight_gamma 1 --teacher_arch 18
+```
 
-**Pretraining Data(Source), Finetuning Data(Target)**
+where you can change the value of lambda and gamma and also the teacher architecture.
 
-- baseline1: train on target
-- baseline2: train on source and target
-- baseline3: train on target with regularization from source
-- baseline4: train on source and target with regularization from source
-- ours1: train on reweighted source and target
-- ours2: train on target with regularization from reweighted source
-- ours3: train on reweighted source and target with regularization from source
-- ours4: train on source and target with regularization from reweighted source
-- ours5: train on reweighted source and target with regularization from reweighted source
+## Architecture Evaluation
 
-### OfficeHome
+**Composing LCT with DARTS:**
 
----
+```
+CIFAR-10/100: cd darts-LCT && python train.py --cutout --auxiliary \\
+--is_cifar 100 0/1 --arch xxx \\
+--seed 3 --save xxx
+```
 
-- Domains:
-    - Art: Ar, Clip Art: Cl, Product: Pr, Real World: Rw
-- For example, if you want to run "ours2" with Art as pretraining data and Product as finetuning data.
+```
+ImageNet: cd darts-LCT && python train_imagenet.py --auxiliary --arch xxx
+```
 
-    ```bash
-    python main.py --save_dir=ArPr_ours2 --gpu=0 --source_domain=Ar --target_domain=Pr --ours2 --lam=7e-3
-    ```
+**Composing LCT with P-DARTS:**
 
-- To run all domains of a specific setting (e.g. ours1)
+```
+CIFAR-100: cd pdarts-LCT && python train_cifar.py --tmp_data_dir ../data \\
+--auxiliary --cutout --save xxx \\
+--note xxx --cifar100 --gpu 0 \\
+--arch xxx --seed 3
+```
 
-    ```bash
-    sh officehome_script/ours1.sh 
-    ```
+```
+CIFAR-10: cd pdarts-LCT && python train_cifar.py --tmp_data_dir ../data \\
+--auxiliary --cutout --save xxx \\
+--note xxx --gpu 0 \\
+--arch xxx --seed 3
+```
 
-### Office31
+```
+ImageNet: cd pdarts-LCT && python train_imagenet.py --auxiliary --arch xxx
+```
 
----
+**Composing LCT with PC-DARTS:**
 
-- Domains:
-    - Amazon: A, DSLR: D, Webcam: W
-- For example, if you want to run "ours2" with Amazon as pretraining data and Webcam as finetuning data.
+```
+ImageNet: cd pcdarts-LCT && python train_imagenet.py --note xxx --auxiliary --arch xxx
+```
 
-    ```bash
-    python main.py --save_dir=A_W_ours2 --gpu=0 --source_domain=A --target_domain=W --dataset=office31 --ours2 --lam=5e-4
-    ```
 
-- To run all domains of a specific setting (e.g. ours1)
+## Ablation Study (Search)
 
-    ```bash
-    sh office31_script/ours1.sh 
-    ```
+**Composing LCT with DARTS:**
+
+```
+CIFAR-10/100: cd darts-LCT && python train_search_ts_ab1/train_search_ts_ab4.py \\
+--teacher_arch 18 \\
+--weight_lambda 1 --weight_gamma 1 --unrolled\\
+--is_cifar100 0/1 --gpu 0 --save xxx
+```
+
+**Composing LCT with P-DARTS:**
+
+```
+CIFAR-100: cd pdarts-LCT && python train_search_ts_ab1/train_search_ts_ab4.py\\
+ --tmp_data_dir ../data --save EXP \\
+--add_layers 6 --add_layers 12 \\
+--dropout_rate 0.1 --dropout_rate 0.4 --dropout_rate 0.7 \\
+--note cifar100-xxx --gpu 0 --cifar100 \\
+--weight_lambda 1 --weight_gamma 1 --teacher_arch 18
+```
+
+```
+CIFAR-10: cd pdarts-LCT && python train_search_ts_ab1/train_search_ts_ab4.py \\
+--tmp_data_dir ../data --save EXP \\
+--add_layers 6 --add_layers 12 \\
+--dropout_rate 0.1 --dropout_rate 0.4 --dropout_rate 0.7 \\
+--note cifar10-xxx --gpu 0 \\
+--weight_lambda 1 --weight_gamma 1 --teacher_arch 18
+```
+
+The evaluation is the same as the above.
